@@ -17,7 +17,6 @@ RUN chmod +x script.sh
 ENV URL="http://192.168.1.1/cgi-bin/json/diagnoseStatus.json"
 ENV CF_ZONE_ID=""
 ENV CF_DNS_RECORD_ID=""
-ENV CF_AUTH_EMAIL=""
 ENV CF_AUTH_TOKEN=""
 ENV CF_RECORD_NAME=""
 ENV CF_TTL=3600
@@ -26,4 +25,5 @@ ENV CF_TTL=3600
 COPY crontab /etc/crontabs/root
 
 # Run the script every day
-ENTRYPOINT ["/bin/sh", "-c", "/app/script.sh && crond -f"]
+# CMD /bin/sh -c "/app/script.sh && crond -f"
+CMD /bin/sh -c "/app/script.sh && crond -f"

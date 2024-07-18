@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Fetch the URL from the environment variable, use default if not set
 url=${URL:-"http://192.168.1.1/cgi-bin/json/diagnoseStatus.json"}
@@ -6,7 +6,6 @@ url=${URL:-"http://192.168.1.1/cgi-bin/json/diagnoseStatus.json"}
 # Cloudflare credentials from environment variables
 zone_id=${CF_ZONE_ID}
 dns_record_id=${CF_DNS_RECORD_ID}
-auth_email=${CF_AUTH_EMAIL}
 auth_token=${CF_AUTH_TOKEN}
 record_name=${CF_RECORD_NAME}
 ttl=${CF_TTL:-3600}
@@ -24,8 +23,7 @@ echo "Extracted IP: $ip4"
 curl --request PUT \
   --url https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records/$dns_record_id \
   --header "Content-Type: application/json" \
-  --header "X-Auth-Email: $auth_email" \
-  --header "X-Auth-Key: $auth_token" \
+  --header "Authorization: Bearer $auth_token" \
   --data '{
     "type": "A",
     "name": "'"${record_name}"'",
@@ -33,3 +31,5 @@ curl --request PUT \
     "ttl": '"${ttl}"',
     "proxied": false
   }'
+
+echo "DNS record updated successfully!"

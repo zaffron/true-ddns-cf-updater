@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  ddclient:
+    image: avinashrijal/true-th-cf-dns-updater:latest
+    container_name: ddclient
+    # network mode must be host
+    network_mode: host
+    environment:
+      - URL=http://192.168.1.1/cgi-bin/json/diagnoseStatus.json
+      - CF_ZONE_ID=your-cloudflare-zone-id
+      - CF_DNS_RECORD_ID=your-cloudflare-dns-record-id
+      - CF_AUTH_TOKEN=your-cloudflare-auth-token
+      - CF_RECORD_NAME="your-record-name.com"
+      - CF_TTL=3600
+    volumes:
+      - ./logs:/var/log
+    restart: unless-stopped
