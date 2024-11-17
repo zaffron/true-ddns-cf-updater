@@ -20,16 +20,23 @@ ip4=$(echo "$response" | jq -r '.WanIP4' | cut -d ',' -f 1)
 echo "Extracted IP: $ip4"
 
 # Update Cloudflare DNS record
-curl --request PUT \
-  --url https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records/$dns_record_id \
-  --header "Content-Type: application/json" \
-  --header "Authorization: Bearer $auth_token" \
-  --data '{
-    "type": "A",
-    "name": "'"${record_name}"'",
-    "content": "'"${ip4}"'",
-    "ttl": '"${ttl}"',
-    "proxied": false
-  }'
+max_retries=5
+attempt=1
 
-echo "DNS record updated successfully!"
+while [ $attempt -le $max_retries ]; do
+  echo "Attempt $attempt of $max_retries..."
+  response=$(update_dns_record)
+
+  # Check for success in the response (assumes JSON with a "success" key)
+  if echo "$response" | grep -q '"success":true'; then
+    echo "DNS record updated successfully!"
+    exit 0
+  else
+    echo "Attempt $attempt failed. Retrying in 5 seconds..."
+    ((attempt++))
+    sleep 5
+  fi
+done
+
+echo "Failed to update DNS record after $max_retries attempts."
+exit 1
