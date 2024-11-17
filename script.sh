@@ -20,10 +20,25 @@ ip4=$(echo "$response" | jq -r '.WanIP4' | cut -d ',' -f 1)
 echo "Extracted IP: $ip4"
 
 # Update Cloudflare DNS record
+update_dns_record() {
+  curl --silent --request PUT \
+    --url "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records/$dns_record_id" \
+    --header "Content-Type: application/json" \
+    --header "Authorization: Bearer $auth_token" \
+    --data '{
+      "type": "A",
+      "name": "'"${record_name}"'",
+      "content": "'"${ip4}"'",
+      "ttl": '"${ttl}"',
+      "proxied": false
+    }'
+}
+
+# Retry loop with a maximum of 5 attempts
 max_retries=5
 attempt=1
 
-while [ $attempt -le $max_retries ]; do
+while [ "$attempt" -le "$max_retries" ]; do
   echo "Attempt $attempt of $max_retries..."
   response=$(update_dns_record)
 
@@ -33,7 +48,7 @@ while [ $attempt -le $max_retries ]; do
     exit 0
   else
     echo "Attempt $attempt failed. Retrying in 5 seconds..."
-    ((attempt++))
+    attempt=$((attempt + 1)) # Increment counter in a POSIX-compatible way
     sleep 5
   fi
 done
